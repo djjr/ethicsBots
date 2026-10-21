@@ -1,0 +1,6 @@
+# Python packages for the HMIA Ethics notebooks (Scout crosswalk RL/IRL/CIRL, agent harness).
+# Environments live OUTSIDE the vault. On each machine:
+#   uv venv ~/venvs/hmia --python 3.12
+#   uv pip install --python ~/venvs/hmia/bin/python -r requirements.txt
+jupyter
+matplotlib

@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python environments and caches (environments live outside the repo; see requirements.txt)
+.venv/
+venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Quarto: rendered output and caches are rebuilt with `quarto render`
+.quarto/
+_site/
+*_files/
+*.html

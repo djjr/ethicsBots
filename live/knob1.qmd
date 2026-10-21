@@ -1,0 +1,69 @@
+---
+title: "How much punishment is enough?"
+subtitle: "The scout at the crosswalk, live"
+format: live-html
+---
+
+A scout comes across an elderly person at a crosswalk. It can **ignore** them, **ask** whether they want help, **help** them across, or **rob** them. Robbing pays +20 if the scout gets away with it, and costs the scout a **punishment** if it's caught.
+
+After the person says "yes please", the scout is caught 40% of the time if it robs them. Move the slider and watch what the scout does.
+
+```{ojs}
+//| echo: false
+viewof punishment = Inputs.range([-60, 0], {value: -40, step: 1, label: "Punishment if caught"})
+```
+
+```{pyodide}
+#| edit: false
+#| echo: false
+#| output: false
+# The scout's world: transitions and rewards (hidden from readers).
+def make_transitions(p_wants=0.5, catch=None):
+    p_caught = {"start": 0.6, "told_yes": 0.4, "told_no": 0.5}
+    p_caught.update(catch or {})
+    def rob(s):
+        return [(1 - p_caught[s], "got_away"), (p_caught[s], "caught")]
+    return {
+        "start":    {"ignore": [(1.0, "moved_on")],
+                     "ask":    [(p_wants, "told_yes"), (1 - p_wants, "told_no")],
+                     "help":   [(p_wants, "thank_you"), (1 - p_wants, "damn_you")],
+                     "rob":    rob("start")},
+        "told_yes": {"ignore": [(1.0, "damn_you")],
+                     "help":   [(0.95, "thank_you"), (0.05, "damn_you")],
+                     "rob":    rob("told_yes")},
+        "told_no":  {"ignore": [(1.0, "moved_on")],
+                     "help":   [(0.95, "damn_you"), (0.05, "thank_you")],
+                     "rob":    rob("told_no")},
+    }
+
+def make_rewards(punishment=-40):
+    return {"thank_you": 5, "damn_you": -2, "got_away": 20, "caught": punishment}
+
+def exact(P, R):
+    Q = {}
+    def best(s2):
+        return max(Q[s2].values()) if s2 in Q else 0
+    for s in ["told_yes", "told_no", "start"]:
+        Q[s] = {a: sum(p * (R.get(s2, 0) + best(s2)) for p, s2 in outcomes)
+                for a, outcomes in P[s].items()}
+    return Q
+
+P = make_transitions()
+```
+
+```{pyodide}
+#| edit: false
+#| echo: false
+#| input:
+#|   - punishment
+Q = exact(P, make_rewards(punishment))
+help_value, rob_value = Q["told_yes"]["help"], Q["told_yes"]["rob"]
+choice = "ROB them" if rob_value > help_value else "help them"
+
+print(f"Punishment if caught: {punishment}")
+print(f"  value of helping after 'yes please': {help_value:6.2f}")
+print(f"  value of robbing after 'yes please': {rob_value:6.2f}")
+print(f"\nThe scout will {choice}.")
+```
+
+**Question:** at what punishment does the scout switch? Why is that number so close to −20? What does it say about relying on deterrence alone?
